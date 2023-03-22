@@ -5,4 +5,4 @@ export interface Rooms {
   updatedAt: Date
 }
 
-export type RoomsPostRequest = Pick<Rooms, 'name'>
+export type RoomsRequestBody = Pick<Rooms, 'name'>

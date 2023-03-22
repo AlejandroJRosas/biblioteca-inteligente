@@ -1,13 +1,19 @@
 import { Request, Response } from 'express'
 import pool from '../database'
 import * as responses from '../utils/responses'
-import { RoomsPostRequest } from '../types/rooms'
+import { RoomsRequestBody } from '../types/rooms'
+import { parseName } from '../utils/parsers'
 
 const MARIADB_STATUSCODES = 1000
 
 const getRooms = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const [rows] = await pool.query('SELECT * FROM rooms')
+    if (rows.length === 0) {
+      throw Object.assign(new Error('The table is empty'), {
+        status: 404
+      })
+    }
     return responses.successItemResponse(
       res,
       200,
@@ -15,17 +21,27 @@ const getRooms = async (_req: Request, res: Response): Promise<Response> => {
       rows
     )
   } catch (error: any) {
-    return responses.errorResponse(res, 500, error.message)
+    if (error.status >= MARIADB_STATUSCODES) {
+      return responses.errorResponse(res, 500, 'Internal Server Error')
+    }
+    return responses.errorResponse(res, error.status, error.message)
   }
 }
 
-// Falta 💀💀💀
 const getRoomById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const [rows] = await pool.query(
       'SELECT * FROM rooms WHERE id = ?',
       req.params.id
     )
+    if (rows.length === 0) {
+      throw Object.assign(
+        new Error('Could not find the element by id:' + req.params.id),
+        {
+          status: 404
+        }
+      )
+    }
     return responses.successItemResponse(
       res,
       200,
@@ -33,23 +49,23 @@ const getRoomById = async (req: Request, res: Response): Promise<Response> => {
       rows[0]
     )
   } catch (error: any) {
-    return responses.errorResponse(res, 500, error.message)
+    if (error.status >= MARIADB_STATUSCODES) {
+      return responses.errorResponse(res, 500, 'Internal Server Error')
+    }
+    return responses.errorResponse(res, error.status, error.message)
   }
 }
 
-const getPostRoomDataFromRequestBody = (req: Request): RoomsPostRequest => {
-  const { name } = req.body
-  const newRoom: RoomsPostRequest = { name }
-  if (newRoom.name === undefined || newRoom.name === null) {
-    throw Object.assign(new Error('Error en el Body'), { status: 400 })
+const getRoomDataFromRequestBody = (object: any): RoomsRequestBody => {
+  const newRoom: RoomsRequestBody = {
+    name: parseName(object.name)
   }
-  console.log(typeof newRoom)
   return newRoom
 }
 
 const addRoom = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const newRoom = getPostRoomDataFromRequestBody(req)
+    const newRoom = getRoomDataFromRequestBody(req.body)
 
     const [rows] = await pool.query('INSERT INTO rooms SET ?', newRoom)
     const insertedId: string = rows.insertId
@@ -70,41 +86,64 @@ const addRoom = async (req: Request, res: Response): Promise<Response> => {
   }
 }
 
-// Falta 💀💀💀
+const updateRoom = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const updatedRoom = getRoomDataFromRequestBody(req.body)
+    const [rows] = await pool.query('UPDATE rooms SET ? WHERE id = ?', [
+      updatedRoom,
+      req.params.id
+    ])
+    console.log(rows)
+    if (rows.affectedRows === 0) {
+      throw Object.assign(
+        new Error('Could not find the element by id:' + req.params.id),
+        {
+          status: 404
+        }
+      )
+    }
+    if (rows.changedRows === 0) {
+      return responses.successResponse(
+        res,
+        200,
+        'PUT Operation Successful but the content did not change'
+      )
+    }
+    return responses.successResponse(res, 200, 'PUT Operation Successful')
+  } catch (error: any) {
+    if (error.status >= MARIADB_STATUSCODES) {
+      return responses.errorResponse(res, 500, 'Internal Server Error')
+    }
+    return responses.errorResponse(res, error.status, error.message)
+  }
+}
+
 const deleteRoom = async (req: Request, res: Response): Promise<Response> => {
   try {
     const [rows] = await pool.query(
       'DELETE FROM rooms WHERE id = ?',
       req.params.id
     )
+    console.log(rows)
+    if (rows.affectedRows === 0) {
+      throw Object.assign(
+        new Error('Could not find the element by id:' + req.params.id),
+        {
+          status: 404
+        }
+      )
+    }
     return responses.successItemResponse(
       res,
       200,
-      'DELETE Operation Successful',
+      'DELETE Operation Successful on the element by id:' + req.params.id,
       rows[0]
     )
   } catch (error: any) {
-    return responses.errorResponse(res, 500, error.message)
-  }
-}
-
-// Falta 💀💀💀
-const updateRoom = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const updatedRoom = getPostRoomDataFromRequestBody(req)
-    const [rows] = await pool.query('UPDATE rooms SET ? WHERE id = ?', [
-      updatedRoom,
-      req.params.id
-    ])
-    console.log(rows)
-    return responses.successItemResponse(
-      res,
-      200,
-      'PUT Operation Successful',
-      rows
-    )
-  } catch (error: any) {
-    return responses.errorResponse(res, 500, error.message)
+    if (error.status >= MARIADB_STATUSCODES) {
+      return responses.errorResponse(res, 500, 'Internal Server Error')
+    }
+    return responses.errorResponse(res, error.status, error.message)
   }
 }
 
