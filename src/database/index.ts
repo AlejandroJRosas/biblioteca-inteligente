@@ -28,8 +28,4 @@ pool.getConnection((err, connection) => {
 
 const promisePool = pool.promise()
 
-// pool.query(
-//   'CREATE TABLE roles(id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,role VARCHAR(31) NOT NULL)'
-// )
-
 export default promisePool
