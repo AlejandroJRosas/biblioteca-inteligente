@@ -34,7 +34,6 @@ export const getRooms = async (
         status: 404
       })
     }
-    console.log('SELECT * FROM rooms LIMIT ?, ?', offset, sizeAsNumber)
     const [result] = await pool.query('SELECT * FROM rooms LIMIT ?, ?', [
       offset,
       sizeAsNumber
