@@ -1,58 +1,83 @@
 import { Request, Response } from 'express'
 import pool from '../database'
-import * as responses from '../utils/responses'
+import {
+  PaginateSettings,
+  errorResponse,
+  paginatedItemsResponse,
+  successItemsResponse,
+  successResponse
+} from '../utils/responses'
 import { RoomsRequestBody } from '../types/rooms'
 import { parseName } from '../utils/parsers'
 
 const MARIADB_STATUSCODES = 1000
+const INTERNAL_SERVER_ERROR = 'Ha ocurrido un error interno del servidor.'
+const PER_PAGE = 10
 
-const getRooms = async (_req: Request, res: Response): Promise<Response> => {
+export const getRooms = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { page = 0, size = PER_PAGE } = req.query
+  let [pageAsNumber, sizeAsNumber] = [
+    Number.parseInt(page as string),
+    Number.parseInt(size as string)
+  ]
+  if (pageAsNumber < 1) {
+    pageAsNumber = 1
+  }
+  const offset = (pageAsNumber - 1) * sizeAsNumber
   try {
     const [rows] = await pool.query('SELECT * FROM rooms')
     if (rows.length === 0) {
-      throw Object.assign(new Error('The table is empty'), {
+      throw Object.assign(new Error('La tabla está vacía'), {
         status: 404
       })
     }
-    return responses.successItemResponse(
-      res,
-      200,
-      'GET Operation Successful',
-      rows
-    )
+    console.log('SELECT * FROM rooms LIMIT ?, ?', offset, sizeAsNumber)
+    const [result] = await pool.query('SELECT * FROM rooms LIMIT ?, ?', [
+      offset,
+      sizeAsNumber
+    ])
+    const pagination: PaginateSettings = {
+      total: rows.length,
+      currentPage: pageAsNumber,
+      perPage: sizeAsNumber
+    }
+    return paginatedItemsResponse(res, 200, result, pagination)
   } catch (error: any) {
     if (error.status >= MARIADB_STATUSCODES) {
-      return responses.errorResponse(res, 500, 'Internal Server Error')
+      return errorResponse(res, 500, INTERNAL_SERVER_ERROR)
     }
-    return responses.errorResponse(res, error.status, error.message)
+    return errorResponse(res, error.status, error.message)
   }
 }
 
-const getRoomById = async (req: Request, res: Response): Promise<Response> => {
+export const getRoomById = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const [rows] = await pool.query(
       'SELECT * FROM rooms WHERE id = ?',
-      req.params.id
+      req.params.roomId
     )
     if (rows.length === 0) {
       throw Object.assign(
-        new Error('Could not find the element by id:' + req.params.id),
+        new Error(
+          'No se pudo encontrar el registro de id:' + req.params.roomId
+        ),
         {
           status: 404
         }
       )
     }
-    return responses.successItemResponse(
-      res,
-      200,
-      'GET Operation Successful',
-      rows[0]
-    )
+    return successResponse(res, 200, rows[0])
   } catch (error: any) {
     if (error.status >= MARIADB_STATUSCODES) {
-      return responses.errorResponse(res, 500, 'Internal Server Error')
+      return errorResponse(res, 500, 'Internal Server Error')
     }
-    return responses.errorResponse(res, error.status, error.message)
+    return errorResponse(res, error.status, error.message)
   }
 }
 
@@ -63,7 +88,10 @@ const getRoomDataFromRequestBody = (object: any): RoomsRequestBody => {
   return newRoom
 }
 
-const addRoom = async (req: Request, res: Response): Promise<Response> => {
+export const addRoom = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const newRoom = getRoomDataFromRequestBody(req.body)
 
@@ -72,85 +100,75 @@ const addRoom = async (req: Request, res: Response): Promise<Response> => {
     const [roomItem] = await pool.query(
       `SELECT * FROM rooms WHERE id = ${insertedId}`
     )
-    return responses.successItemResponse(
-      res,
-      200,
-      'POST Operation Successful',
-      roomItem[0]
-    )
+    return successItemsResponse(res, 201, roomItem[0])
   } catch (error: any) {
     if (error.status >= MARIADB_STATUSCODES) {
-      return responses.errorResponse(res, 500, 'Internal Server Error')
+      return errorResponse(res, 500, INTERNAL_SERVER_ERROR)
     }
-    return responses.errorResponse(res, error.status, error.message)
+    return errorResponse(res, error.status, error.message)
   }
 }
 
-const updateRoom = async (req: Request, res: Response): Promise<Response> => {
+export const updateRoom = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const updatedRoom = getRoomDataFromRequestBody(req.body)
     const [rows] = await pool.query('UPDATE rooms SET ? WHERE id = ?', [
       updatedRoom,
-      req.params.id
+      req.params.roomId
     ])
-    console.log(rows)
     if (rows.affectedRows === 0) {
       throw Object.assign(
-        new Error('Could not find the element by id:' + req.params.id),
+        new Error(
+          'No se pudo encontrar el registro de id:' + req.params.roomId
+        ),
         {
           status: 404
         }
       )
     }
     if (rows.changedRows === 0) {
-      return responses.successResponse(
+      return successResponse(
         res,
         200,
-        'PUT Operation Successful but the content did not change'
+        'Operación PUT exitosa pero el contenido del registro no cambió'
       )
     }
-    return responses.successResponse(res, 200, 'PUT Operation Successful')
+    return successResponse(res, 200, 'Room modified')
   } catch (error: any) {
     if (error.status >= MARIADB_STATUSCODES) {
-      return responses.errorResponse(res, 500, 'Internal Server Error')
+      return errorResponse(res, 500, INTERNAL_SERVER_ERROR)
     }
-    return responses.errorResponse(res, error.status, error.message)
+    return errorResponse(res, error.status, error.message)
   }
 }
 
-const deleteRoom = async (req: Request, res: Response): Promise<Response> => {
+export const deleteRoom = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const [rows] = await pool.query(
       'DELETE FROM rooms WHERE id = ?',
-      req.params.id
+      req.params.roomId
     )
-    console.log(rows)
     if (rows.affectedRows === 0) {
       throw Object.assign(
-        new Error('Could not find the element by id:' + req.params.id),
+        new Error(
+          'No se pudo encontrar el registro de id:' + req.params.roomId
+        ),
         {
           status: 404
         }
       )
     }
-    return responses.successItemResponse(
-      res,
-      200,
-      'DELETE Operation Successful on the element by id:' + req.params.id,
-      rows[0]
-    )
+    return successResponse(res, 200, 'Sala eliminada')
   } catch (error: any) {
     if (error.status >= MARIADB_STATUSCODES) {
-      return responses.errorResponse(res, 500, 'Internal Server Error')
+      return errorResponse(res, 500, INTERNAL_SERVER_ERROR)
     }
-    return responses.errorResponse(res, error.status, error.message)
+    return errorResponse(res, error.status, error.message)
   }
-}
-
-export const methods = {
-  getRooms,
-  getRoomById,
-  addRoom,
-  deleteRoom,
-  updateRoom
 }

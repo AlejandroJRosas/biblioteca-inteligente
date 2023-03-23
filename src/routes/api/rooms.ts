@@ -1,13 +1,19 @@
 import express from 'express'
-import { methods as roomsMethods } from '../../controllers/rooms.controller'
+import {
+  getRooms,
+  getRoomById,
+  addRoom,
+  deleteRoom,
+  updateRoom
+} from '../../controllers/rooms.controller'
 
 const router = express.Router()
 
 /* eslint-disable @typescript-eslint/no-misused-promises */
-router.get('/', roomsMethods.getRooms)
-router.get('/:id', roomsMethods.getRoomById)
-router.post('/', roomsMethods.addRoom)
-router.delete('/:id', roomsMethods.deleteRoom)
-router.put('/:id', roomsMethods.updateRoom)
+router.get('/', getRooms)
+router.get('/:roomId', getRoomById)
+router.post('/', addRoom)
+router.delete('/:roomId', deleteRoom)
+router.put('/:roomId', updateRoom)
 
 export default router
