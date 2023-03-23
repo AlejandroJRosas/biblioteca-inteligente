@@ -11,26 +11,53 @@ export const errorResponse = (
   })
 }
 
-export const successResponse = (
+export const successResponse = <T>(
   res: Response,
   status: number,
-  message: string
+  item: T
 ): Response => {
   return res.status(status).json({
     success: true,
-    message
+    item
   })
 }
 
-export const successItemResponse = (
+export const successItemsResponse = <T>(
   res: Response,
   status: number,
-  message: string,
-  items: any
+  items: T[]
 ): Response => {
   return res.status(status).json({
     success: true,
-    message,
     items
   })
+}
+
+export const paginatedItemsResponse = <T>(
+  res: Response,
+  status: number,
+  items: T[],
+  paginate: PaginateSettings
+): Response => {
+  const pages = numberOfPages(paginate.total, paginate.perPage)
+  return res.status(status).json({
+    success: true,
+    paginate: {
+      ...paginate,
+      pages
+    },
+    items
+  })
+}
+
+export function numberOfPages (total: number, perPage: number): number {
+  if (total === 0 || perPage === 0) return 0
+
+  return Math.ceil(total / perPage)
+}
+
+export interface PaginateSettings {
+  total: number
+  page: number
+  perPage: number
 }
