@@ -8,7 +8,7 @@ const TABLES = [
   'users',
   'clients',
   'reservations',
-  'reservations_users'
+  'reservations_clients'
 ]
 
 export const synchronizeTables = (): void => {

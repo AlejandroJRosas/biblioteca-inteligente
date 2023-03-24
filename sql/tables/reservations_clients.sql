@@ -1,4 +1,4 @@
-CREATE TABLE reservations_users(
+CREATE TABLE reservations_clients(
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `reservationId` INT NOT NULL,
   `clientId` INT NOT NULL,
