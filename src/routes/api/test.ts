@@ -4,9 +4,7 @@ import pool from '../../database'
 const router = express.Router()
 
 export const getProducts = async (): Promise<void> => {
-  const [rows] = await pool.query(
-    'CREATE TABLE roles(id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,role VARCHAR(31) NOT NULL)'
-  )
+  const [rows] = await pool.query('DESCRIBE rooms')
   return rows
 }
 

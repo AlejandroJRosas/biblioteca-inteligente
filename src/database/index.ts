@@ -1,5 +1,6 @@
 import mysql from 'mysql2'
 import { DBHOST, DBNAME, DBUSER } from '../config'
+import { synchronizeTables } from './table-sync'
 
 const pool = mysql.createPool({
   database: DBNAME,
@@ -23,13 +24,10 @@ pool.getConnection((err, connection) => {
   if (connection != null) {
     connection.release()
     console.log('Database connected')
+    synchronizeTables()
   }
 })
 
 const promisePool = pool.promise()
-
-// pool.query(
-//   'CREATE TABLE roles(id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,role VARCHAR(31) NOT NULL)'
-// )
 
 export default promisePool

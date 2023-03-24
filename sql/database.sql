@@ -1,1 +1,1 @@
--- Aqui se pone el código SQL
+CREATE DATABASE biblioteca
