@@ -16,7 +16,7 @@ const STATUS_CREATED = 201
 const STATUS_BAD_REQUEST = 400
 const STATUS_NOT_FOUND = 404
 
-const DEFAULT_PAGE = 0
+const DEFAULT_PAGE = 1
 const DEFAULT_SIZE = 10
 
 const validatePageAndSize = (
@@ -28,12 +28,18 @@ const validatePageAndSize = (
 
   if (!isNaN(Number(page)) && Number.isInteger(Number(page))) {
     pageAsNumber = Number.parseInt(page)
+    if (pageAsNumber < 1) {
+      pageAsNumber = 1
+    }
   } else {
     return 'La página debe ser un número entero'
   }
 
   if (!isNaN(Number(size)) && Number.isInteger(Number(size))) {
     sizeAsNumber = Number.parseInt(size)
+    if (sizeAsNumber < 1) {
+      sizeAsNumber = 1
+    }
   } else {
     return 'La tamaño debe ser un número entero'
   }
