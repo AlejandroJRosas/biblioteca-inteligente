@@ -1,6 +1,5 @@
 import mysql from 'mysql2'
 import { DBHOST, DBNAME, DBUSER } from '../config'
-import { synchronizeTables } from './table-sync'
 
 const pool = mysql.createPool({
   database: DBNAME,
@@ -24,7 +23,6 @@ pool.getConnection((err, connection) => {
   if (connection != null) {
     connection.release()
     console.log('Database connected')
-    synchronizeTables()
   }
 })
 

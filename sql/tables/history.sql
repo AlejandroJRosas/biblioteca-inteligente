@@ -1,0 +1,8 @@
+CREATE TABLE history(
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(31) NOT NULL,
+  `quantity` INT NOT NULL DEFAULT 1,
+  `playerId` INT NOT NULL,
+  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_player FOREIGN KEY (playerId) REFERENCES players (id)
+)
