@@ -1,4 +1,4 @@
-import express from 'express'
+import { Router } from 'express'
 import {
   getRooms,
   getRoomById,
@@ -7,7 +7,7 @@ import {
   updateRoom
 } from '../../controllers/rooms.controller'
 
-const router = express.Router()
+const router = Router()
 
 /* eslint-disable @typescript-eslint/no-misused-promises */
 router.get('/', getRooms)
