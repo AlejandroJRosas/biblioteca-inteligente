@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "cls && ts-node-dev src/index.ts",
     "start": "npm run build && npm run prod",
     "prod": "node build/index.js",
     "build": "tsc"
