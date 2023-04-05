@@ -1,9 +1,9 @@
 CREATE TABLE reservations_clients(
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `reservationId` INT NOT NULL,
-  `clientId` INT NOT NULL,
+  `id` UNSIGNED INT AUTO_INCREMENT PRIMARY KEY,
+  `reservationId` UNSIGNED INT NOT NULL,
+  `clientId` UNSIGNED INT NOT NULL,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_reservation FOREIGN KEY (reservationId) REFERENCES reservations (id),
-  CONSTRAINT fk_client FOREIGN KEY (clientId) REFERENCES clients (id)
+  CONSTRAINT fk_reservations_clients_reservation FOREIGN KEY (reservationId) REFERENCES reservations (id),
+  CONSTRAINT fk_reservations_clients_client FOREIGN KEY (clientId) REFERENCES clients (id)
 )
