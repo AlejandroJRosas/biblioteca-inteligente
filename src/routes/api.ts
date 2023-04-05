@@ -1,9 +1,9 @@
 import express from 'express'
 
-import testRouter from './api/test'
+import roomsRouter from './api/rooms'
 
 const router = express.Router()
 
-router.use('/ping', testRouter)
+router.use('/rooms', roomsRouter)
 
 export default router
