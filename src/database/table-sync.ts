@@ -11,22 +11,22 @@ const TABLES = [
 ]
 
 export const synchronizeTables = async (): Promise<void> => {
-  for (const element of TABLES) {
-    await verify(element)
+  for (const tableName of TABLES) {
+    await verifyTableExistsOrCreate(tableName)
   }
 }
 
-const verify = async (element: string): Promise<void> => {
+const verifyTableExistsOrCreate = async (tableName: string): Promise<void> => {
   try {
-    await pool.query(`DESCRIBE ${element}`)
-    console.log(`🟢 Tabla [${element}] existe`)
+    await pool.query(`DESCRIBE ${tableName}`)
+    console.log(`🟢 Tabla [${tableName}] existe`)
   } catch (error: any) {
     if (error.errno === TABLE_NOT_FOUND) {
-      console.log(`🟠 No existe la tabla [${element}]`)
-      await create(element)
+      console.log(`🟠 No existe la tabla [${tableName}]`)
+      await create(tableName)
       return
     }
-    console.log(`Error del servidor al intentar validar la tabla [${element}]`)
+    throw error
   }
 }
 
